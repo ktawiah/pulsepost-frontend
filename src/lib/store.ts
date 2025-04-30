@@ -12,7 +12,6 @@ import {
 import { authEndpoints } from "./features/auth-endpoints";
 import authReducer from "./features/auth-slice";
 import customStorage from "./features/storage";
-import { postsSlice } from "./features/posts-endpoints";
 
 const authConfig = {
   key: "auth",
@@ -25,7 +24,6 @@ export const makeStore = () => {
       [authEndpoints.reducerPath]: authEndpoints.reducer,
       // @ts-expect-error
       auth: persistReducer(authConfig, authReducer),
-      posts: postsSlice.reducer,
     },
     middleware: (getDefaultMiddleware) =>
       getDefaultMiddleware({

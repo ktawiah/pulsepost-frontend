@@ -1,69 +1,91 @@
 import api from "./api";
+import { Post } from "@/types";
 
-const postsUrl = `${process.env.NEXT_PUBLIC_BACKEND_URL}/posts`;
+const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-export const postsSlice = api.injectEndpoints({
-  endpoints: (build) => ({
-    createPost: build.mutation<
-      Post,
-      Pick<Post, "title" | "content" | "status" | "user">
-    >({
-      query: (data) => ({
+const postsUrl = `${backendUrl}/posts`;
+
+interface GetPostsParams {
+  page?: number;
+  pageSize?: number;
+  search?: string;
+  tag?: string;
+}
+
+interface UpdatePostParams {
+  id: string;
+  data: Partial<Post>;
+}
+
+export const postsEndpoints = api.injectEndpoints({
+  endpoints: (build: any) => ({
+    getPosts: build.query({
+      query: ({ page = 1, pageSize = 10, search, tag }: GetPostsParams) => ({
         url: `${postsUrl}/`,
-        body: { ...data },
-        method: "POST",
+        method: "GET",
+        params: {
+          page,
+          page_size: pageSize,
+          search,
+          tag,
+        },
       }),
     }),
-    retrieveAllPosts: build.query<PaginatedPosts, null>({
-      query: () => ({
-        url: `${postsUrl}/`,
+    getRecentPosts: build.query({
+      query: ({ page = 1, pageSize = 10 }: GetPostsParams) => ({
+        url: `${postsUrl}/recent/`,
+        method: "GET",
+        params: {
+          page,
+          page_size: pageSize,
+        },
+      }),
+    }),
+    getMyPosts: build.query({
+      query: ({ page = 1, pageSize = 10 }: GetPostsParams) => ({
+        url: `${postsUrl}/my/`,
+        method: "GET",
+        params: {
+          page,
+          page_size: pageSize,
+        },
+      }),
+    }),
+    getPost: build.query({
+      query: (id: string) => ({
+        url: `${postsUrl}/${id}/`,
         method: "GET",
       }),
     }),
-    retrievePost: build.query<Post, Pick<Post, "id">>({
-      query: (data) => ({
-        url: `${postsUrl}/${data.id}`,
-        method: "GET",
-      }),
-    }),
-    updatePost: build.mutation<Post, Post>({
-      query: (data) => ({
-        url: `${postsUrl}/${data.id}`,
+    createPost: build.mutation({
+      query: (data: Partial<Post>) => ({
+        url: `${postsUrl}/`,
         method: "POST",
-        body: { ...data },
+        body: data,
       }),
     }),
-    partialUpdatePost: build.mutation<
-      Post,
-      Omit<Post, "url" | "created_at" | "updated_at">
-    >({
-      query: (data) => ({
-        url: `${postsUrl}/${data.id}`,
-        method: "POST",
-        body: { ...data },
+    updatePost: build.mutation({
+      query: ({ id, data }: UpdatePostParams) => ({
+        url: `${postsUrl}/${id}/`,
+        method: "PUT",
+        body: data,
       }),
     }),
-    deletePost: build.query<null, Pick<Post, "id">>({
-      query: (data) => ({
-        url: `${postsUrl}/${data.id}`,
+    deletePost: build.mutation({
+      query: (id: string) => ({
+        url: `${postsUrl}/${id}/`,
         method: "DELETE",
-      }),
-    }),
-    recentPost: build.query<PaginatedPosts, null>({
-      query: () => ({
-        url: `${postsUrl}/?recent_posts`,
-        // cache: "",
       }),
     }),
   }),
 });
 
 export const {
+  useGetPostsQuery,
+  useGetRecentPostsQuery,
+  useGetMyPostsQuery,
+  useGetPostQuery,
   useCreatePostMutation,
-  useDeletePostQuery,
-  usePartialUpdatePostMutation,
   useUpdatePostMutation,
-  useRetrieveAllPostsQuery,
-  useRetrievePostQuery,
-  useRecentPostQuery,
-} = postsSlice;
+  useDeletePostMutation,
+} = postsEndpoints;

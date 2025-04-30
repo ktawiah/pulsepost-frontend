@@ -12,6 +12,17 @@ const mutex = new Mutex();
 const baseQuery = fetchBaseQuery({
   credentials: "include",
   baseUrl: backendUrl,
+  prepareHeaders: (headers, { getState }) => {
+    const csrfToken = document.cookie
+      .split('; ')
+      .find(row => row.startsWith('csrftoken='))
+      ?.split('=')[1];
+    
+    if (csrfToken) {
+      headers.set('X-CSRFToken', csrfToken);
+    }
+    return headers;
+  },
 });
 const baseQueryWithReauth: BaseQueryFn<
   string | FetchArgs,
@@ -26,19 +37,19 @@ const baseQueryWithReauth: BaseQueryFn<
       try {
         const refreshResult = await baseQuery(
           {
-            url: `${backendUrl}/accounts/refresh/`,
+            url: `${backendUrl}/auth/refresh/`,
             method: "POST",
           },
           api,
           extraOptions
-        );
+        ) as { data: { id: string; email: string; first_name: string; last_name: string } };
         if (refreshResult.data) {
-          api.dispatch(authenticateUser());
+          api.dispatch(authenticateUser(refreshResult.data));
           result = await baseQuery(args, api, extraOptions);
         } else {
           await baseQuery(
             {
-              url: `${backendUrl}/accounts/logout/`,
+              url: `${backendUrl}/auth/logout/`,
               method: "POST",
             },
             api,

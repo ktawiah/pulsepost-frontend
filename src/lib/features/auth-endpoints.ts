@@ -2,7 +2,7 @@ import api from "./api";
 
 const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL;
 
-const accountsUrl = `${backendUrl}/accounts`;
+const accountsUrl = `${backendUrl}/auth`;
 export const authEndpoints = api.injectEndpoints({
   endpoints: (build) => ({
     registerAccount: build.mutation<
@@ -100,7 +100,7 @@ export const authEndpoints = api.injectEndpoints({
       Pick<SocialAuthType, "state" | "code" | "provider">
     >({
       query: (data) => ({
-        url: `${backendUrl}/accounts/oauth/${
+        url: `${backendUrl}/auth/oauth/${
           data.provider
         }/?state=${encodeURIComponent(data.state)}&code=${encodeURIComponent(
           data.code
